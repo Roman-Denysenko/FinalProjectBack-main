@@ -1,0 +1,22 @@
+services:
+  web:
+    build: .
+    container_name: final_project_backend
+    restart: unless-stopped
+    ports:
+      - '3001:3001'
+    depends_on:
+      - mongodb
+    environment:
+      DB_HOST: mongodb://mongodb:27017/final-project?retryWrites=true&w=majority
+      PORT: 3001
+      SECRET: mysecretkey
+
+  mongodb:
+    ports:
+      - '27017:27017'
+    image: mongo
+    container_name: final_project_mongo
+    pid: 'host'
+  run:
+    web: node ./src/app.js

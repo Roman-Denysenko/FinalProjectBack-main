@@ -1,0 +1,10 @@
+setup:
+  addons:
+    - plan: mongodb
+      as: DATABASE
+build:
+  docker:
+    web: Dockerfile
+    mongodb: Dockerfile.mongo
+run:
+  web: node ./src/app.js

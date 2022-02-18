@@ -1,0 +1,699 @@
+openapi: '3.0.1'
+info:
+  title: 'Final Project'
+  description: 'Final Project API specs.'
+  version: '1.0.0'
+  servers:
+    - url: 'http://final-destination-back.herokuapp.com'
+basePath: /api
+tags:
+  - name: 'Authentication'
+    description: "Endpoints for user's authentication"
+  - name: 'Dashboard'
+    description: 'User`s Dashboard'
+schemes:
+  - 'https'
+  - 'http'
+
+paths:
+  /api/user/signin:
+    post:
+      description: 'User`s signup'
+      tags:
+        - 'Authentication'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              name: signinCredits
+              description: User`s creditd for signing in
+              $ref: '#/components/schemas/signinCredits'
+            examples:
+              usual:
+                summary: Usual example
+                value:
+                  {
+                    'name': 'Roman',
+                    'email': 'titoff.roma@gmail.com',
+                    'password': '123qweQWE',
+                  }
+      responses:
+        '201':
+          description: 'Successfully signed in'
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: 'success'
+                  code:
+                    type: integer
+                    format: int32
+                    example: 201
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/userData'
+                      token:
+                        type: string
+                        format: uuid
+        '400':
+          $ref: '#/components/responses/OtherRejections'
+        '401':
+          $ref: '#/components/responses/WrongCreditsError'
+        '409':
+          description: 'User with given email already heve signed in'
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: 'failure'
+                  code:
+                    type: integer
+                    format: int32
+                    example: 201
+                  message:
+                    type: string
+                    example: 'Conflict'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/user/login:
+    post:
+      description: 'User`s login'
+      tags:
+        - 'Authentication'
+      requestBody:
+        content:
+          application/json:
+            name: loginCredits
+            description: User`s creditd for log in
+            schema:
+              $ref: '#/components/schemas/loginCredits'
+            examples:
+              usual:
+                summary: Usual example
+                value:
+                  { 'email': 'titoff.roma@gmail.com', 'password': '123qweQWE' }
+      responses:
+        '200':
+          description: 'Successfully logged in'
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: 'success'
+                  code:
+                    type: integer
+                    format: int32
+                    example: 200
+                  accessToken:
+                    type: string
+                    format: uuid
+                  refreshToken:
+                    type: string
+                    format: uuid
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/userData'
+
+        '400':
+          $ref: '#/components/responses/OtherRejections'
+        '401':
+          $ref: '#/components/responses/WrongCreditsError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/user/refresh:
+    post:
+      security:
+        - bearerAuth: []
+      description: 'refresh user`s accesstoken'
+      tags:
+        - 'Authentication'
+      # requestBody:
+      #   content:
+      #     application/json:
+      #       name: loginCredits
+      #       description: 'refresh user`s accesstoken'
+      #       schema:
+      #         $ref: '#/components/schemas/sessionSchema'
+      #       examples:
+      #         usual:
+      #           summary: Usual example
+      #           value:
+      #             { 'uid': '1312g4j2brjg' }
+      responses:
+        '200':
+          description: 'successfully refreshed continue to work in this session'
+          content:
+            application/json, charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: 'success'
+                  code:
+                    type: integer
+                    format: int32
+                    example: 200
+                  tokenAccess:
+                    type: string
+                    format: uuid
+                    required: true
+                  tokenRefresh:
+                    type: string
+                    format: uuid
+                    required: true
+                  sid:
+                    type: string
+                    required: true
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/userData'
+
+        '401':
+          description: 'Unauthorized'
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: 'Not found'
+          $ref: '#/components/responses/NotFound'
+
+  /api/user/logout:
+    post:
+      security:
+        - bearerAuth: []
+      description: 'User`s logout'
+      tags:
+        - 'Authentication'
+      responses:
+        '200':
+          description: 'Successfully logged out'
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: 'success'
+                  code:
+                    type: integer
+                    format: int32
+                    example: 200
+                  data:
+                    type: string
+                    example: 'Successfully logged out'
+        '400':
+          $ref: '#/components/responses/OtherRejections'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/dashboard:
+    get:
+      security:
+        - bearerAuth: []
+      description: 'Get the list of all user`s cards by categry'
+      tags:
+        - 'Dashboard'
+      responses:
+        '200':
+          description: 'List of user`s cards by categry'
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: 'success'
+                  code:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/dashboard'
+        '400':
+          $ref: '#/components/responses/OtherRejections'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    post:
+      security:
+        - bearerAuth: []
+      description: 'Add new card to a user`s dashboard'
+      tags:
+        - 'Dashboard'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  required: true
+                task:
+                  type: string
+                  required: true
+                chalenge:
+                  type: boolean
+                  example: false
+                level:
+                  type: string
+                  example: normal
+                category:
+                  type: stuff
+            examples:
+              full:
+                summary: Full example
+                value: |-
+                  {
+                    "level": "hard",
+                    "chalenge": true,
+                    "category": "family",
+                    "task": "My new card",
+                    "date": "2021-06-06T08:13:12.979Z"
+                  }
+              partial:
+                summary: Partial with defaults
+                value: |-
+                  {
+                    "task": "My new card",
+                    "date": "2021-06-06T08:13:12.979Z"
+                  }
+      responses:
+        '201':
+          description: 'New card added successfully'
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: 'success'
+                  code:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/card'
+        '400':
+          $ref: '#/components/responses/OtherRejections'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/dashboard/{cardId}:
+    delete:
+      security:
+        - bearerAuth: []
+      description: 'Delete card by Id'
+      tags:
+        - 'Dashboard'
+      parameters:
+        - in: path
+          name: cardId
+          required: true
+          description: Id of card to delete
+      responses:
+        '200':
+          description: 'Successfully deleted'
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: 'success'
+                  code:
+                    type: integer
+                    example: 200
+                  data:
+                    type: string
+                    example: 'Successfully deleted'
+        '400':
+          $ref: '#/components/responses/OtherRejections'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    patch:
+      security:
+        - bearerAuth: []
+      description: 'Card update by Id'
+      tags:
+        - 'Dashboard'
+      parameters:
+        - in: path
+          name: cardId
+          required: true
+          description: Id of card to update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  required: true
+                task:
+                  type: string
+                  required: true
+                chalenge:
+                  type: boolean
+                  example: false
+                level:
+                  type: string
+                  example: normal
+                category:
+                  type: stuff
+            examples:
+              full:
+                summary: Full example
+                value: |-
+                  {
+                    "level": "hard",
+                    "chalenge": true,
+                    "category": "family",
+                    "task": "My new card",
+                    "date": "2021-06-06T08:13:12.979Z"
+                  }
+              partial1:
+                summary: Partial updates
+                value: |-
+                  {
+                    "category": "staff"
+                  }
+              partial2:
+                summary: Partial updates
+                value: |-
+                  {
+                    "chalenge": true,
+                    "date": "2021-06-06T08:13:12.979Z"
+                  }
+      responses:
+        '200':
+          description: 'Successfully updated'
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: 'success'
+                  code:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/card'
+        '400':
+          $ref: '#/components/responses/OtherRejections'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/dashboard/{cardId}/done:
+    patch:
+      security:
+        - bearerAuth: []
+      description: 'Set card status to done'
+      tags:
+        - 'Dashboard'
+      parameters:
+        - in: path
+          name: cardId
+          required: true
+          description: Id of card to update status
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                done:
+                  type: boolean
+                  example: true
+                  required: true
+            examples:
+              Only available variant:
+                value: |-
+                  {
+                      "done": true
+                  }
+      responses:
+        '200':
+          description: 'Successfully set card status to done'
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: 'success'
+                  code:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/card'
+        '400':
+          $ref: '#/components/responses/OtherRejections'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  responses:
+    WrongCreditsError:
+      description: 'Wrong credits'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: 'failure'
+              code:
+                type: integer
+                format: int32
+                example: 401
+              message:
+                type: string
+                example: 'Wrong credits'
+    OtherRejections:
+      description: 'Other rejections'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: 'failure'
+              code:
+                type: integer
+                format: int32
+                example: 400
+              message:
+                type: string
+                example: 'Validation error'
+    UnauthorizedError:
+      description: 'Access token is missing or invalid'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: 'failure'
+              code:
+                type: integer
+                format: int32
+                example: 401
+              message:
+                type: string
+                example: 'Not authorized'
+    NotFound:
+      description: 'Not found'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: 'failure'
+              code:
+                type: integer
+                format: int32
+                example: 404
+              message:
+                type: string
+                example: 'Not found'
+    ServerError:
+      description: 'Default server error'
+      content:
+        application/json; charset=utf-8:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: 'failure'
+              code:
+                type: integer
+                format: int32
+                example: 500
+              message:
+                type: string
+                example: 'Server error'
+  schemas:
+    userData:
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          title: 'User ID'
+        name:
+          type: string
+          readOnly: true
+          title: 'User name'
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: 'User ID'
+    signinCredits:
+      properties:
+        name:
+          type: string
+          description: 'name of user'
+        email:
+          type: string
+          format: email
+          description: 'user`s email'
+        password:
+          type: string
+          format: password
+          description: 'user`s password'
+      required:
+        - name
+        - email
+        - password
+    loginCredits:
+      properties:
+        email:
+          type: string
+          format: email
+          description: 'user`s email'
+        password:
+          type: string
+          format: password
+          description: 'user`s password'
+      required:
+        - email
+        - password
+    sessionSchema:
+      properties:
+        uid:
+          type: string
+          required: true
+
+    dashboard:
+      properties:
+        today:
+          type: array
+          items:
+            $ref: '#/components/schemas/card'
+        tomorrow:
+          type: array
+          items:
+            $ref: '#/components/schemas/card'
+        rest:
+          type: array
+          items:
+            $ref: '#/components/schemas/card'
+        done:
+          type: array
+          items:
+            $ref: '#/components/schemas/card'
+    card:
+      properties:
+        _id:
+          type: string
+          format: uuid
+          readOnly: true
+          title: 'Card ID'
+        date:
+          type: string
+          format: date-time
+          title: 'Date'
+          required: true
+        task:
+          type: string
+          default: 'My card'
+          title: 'Task'
+          required: true
+        level:
+          type: string
+          default: 'normal'
+          title: 'Card level'
+        challenge:
+          type: boolean
+          default: false
+          title: 'Chalenge'
+        category:
+          type: string
+          default: 'staff'
+          title: 'Category'
+        done:
+          type: boolean
+          default: false
+          title: 'Done'
+        owner:
+          type: string
+          format: uuid
+          readOnly: true
+          title: "User's ID"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
